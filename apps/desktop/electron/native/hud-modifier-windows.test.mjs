@@ -6,8 +6,9 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 
-import { buildHudModifierMonitor } from '../../scripts/build-hud-modifier-monitor.mjs'
+import { buildHudModifierMonitor, resolveWindowsFrameworkCompiler } from '../../scripts/build-hud-modifier-monitor.mjs'
 
 // Run on Windows, without a developer compiler on PATH, using the real Node
 // pipe transport. No input is synthesized and no user desktop is controlled.
@@ -57,7 +58,30 @@ test('Windows builds and starts its HUD helper without Clang or a developer SDK'
     child.stdin.end()
     assert.deepEqual(await exited, [0, null], 'stdin EOF must release the listener and exit')
   } finally {
-    child?.kill()
+    if (child?.pid && child.exitCode === null) {
+      const closed = once(child, 'close')
+      child.kill()
+      await closed
+    }
     rmSync(distDir, { recursive: true, force: true })
+  }
+})
+
+test('Windows gesture rejects ordinary shortcuts and recovers for the next tap', {
+  skip: process.platform !== 'win32', timeout: 30_000
+}, async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'hud-gesture-'))
+  const exe = join(dir, 'gesture.exe')
+  const run = promisify(execFile)
+  try {
+    await run(resolveWindowsFrameworkCompiler(), [
+      '/nologo', '/target:exe', '/warnaserror+', `/out:${exe}`,
+      fileURLToPath(new URL('./hud-modifier-gesture.cs', import.meta.url)),
+      fileURLToPath(new URL('./hud-modifier-gesture.test.cs', import.meta.url))
+    ], { windowsHide: true })
+    const result = await run(exe, [], { windowsHide: true })
+    assert.equal(result.stdout.trim(), 'gesture contracts passed')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
   }
 })
