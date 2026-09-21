@@ -3,7 +3,8 @@ import { useStore } from '@nanostores/react'
 import { type Translations, useI18n } from '@/i18n'
 import { useStoreSelector } from '@/lib/use-session-slice'
 import { cn } from '@/lib/utils'
-import { $sessionColorById, sessionColorFor } from '@/store/session-color'
+import { $projectOwnerBySessionId, $projects } from '@/store/projects'
+import { $sessionColorById, $sessionColorOverrides, sessionColorFrom } from '@/store/session-color'
 import { $sessionDotStateById, type SessionDotState } from '@/store/session-dot-state'
 import type { SessionInfo } from '@/types/hermes'
 
@@ -126,10 +127,14 @@ export function SessionStatusDot({ storedSessionId, session, branchStem, classNa
   const { t } = useI18n()
   const r = t.sidebar.row
 
-  // Subscribe to the shared color map for reactivity; sessionColorFor falls
-  // back to the resolver for a session outside the recents page.
-  useStore($sessionColorById)
-  const color = sessionColorFor(session) ?? null
+  // Render from SUBSCRIBED values, not from sessionColorFor(): that resolver
+  // re-reads the atoms with .get() during render, which does not schedule a
+  // repaint — a picked color only appeared on the row after it remounted.
+  const colorById = useStore($sessionColorById)
+  const projects = useStore($projects)
+  const overrides = useStore($sessionColorOverrides)
+  const owners = useStore($projectOwnerBySessionId)
+  const color = sessionColorFrom(session, { colorById, overrides, owners, projects }) ?? null
 
   // Selector, not a plain useStore: the map is rebuilt whenever any session's
   // status changes, but a given dot only repaints when ITS OWN state flips.
