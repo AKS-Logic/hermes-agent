@@ -7,7 +7,11 @@ on:
       - 'apps/desktop/scripts/build-hud-modifier-monitor.mjs'
       - '.github/workflows/desktop-hud-native-windows.yml'
   push:
-    branches: ['bb/desktop-tray-hud-fixes']
+    branches: [main]
+    paths:
+      - 'apps/desktop/electron/native/hud-modifier-*'
+      - 'apps/desktop/scripts/build-hud-modifier-monitor.mjs'
+      - '.github/workflows/desktop-hud-native-windows.yml'
   workflow_dispatch:
 
 permissions:
