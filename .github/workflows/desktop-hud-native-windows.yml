@@ -1,0 +1,30 @@
+name: Windows HUD native helper
+
+on:
+  pull_request:
+    paths:
+      - 'apps/desktop/electron/native/hud-modifier-*'
+      - 'apps/desktop/scripts/build-hud-modifier-monitor.mjs'
+      - '.github/workflows/desktop-hud-native-windows.yml'
+  push:
+    branches: ['bb/desktop-tray-hud-fixes']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-hud-native-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  native-helper:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22.22.0'
+      - name: Build and exercise the real helper without a developer toolchain
+        run: node --test apps/desktop/electron/native/hud-modifier-windows.test.mjs
