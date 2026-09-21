@@ -102,6 +102,8 @@ class TestDetectDefaultDarwin:
             ("org.chromium.Chromium", "chromium"),
             ("com.brave.Browser.origin.beta", bc.UNSUPPORTED_CHANNEL),
             ("com.brave.Browser.origin.nightly", bc.UNSUPPORTED_CHANNEL),
+            ("com.vivaldi.Vivaldi", "vivaldi"),
+            ("com.vivaldi.Vivaldi.snapshot", bc.UNSUPPORTED_CHANNEL),
         ],
     )
     def test_bundle_map(self, bundle, expected):
@@ -130,6 +132,9 @@ class TestDetectDefaultLinux:
             ("brave-origin-nightly.desktop", bc.UNSUPPORTED_CHANNEL),
             ("microsoft-edge.desktop", "edge"),
             ("com.microsoft.Edge.desktop", "edge"),
+            ("vivaldi-stable.desktop", "vivaldi"),
+            ("com.vivaldi.Vivaldi.desktop", "vivaldi"),
+            ("vivaldi-snapshot.desktop", bc.UNSUPPORTED_CHANNEL),
             ("firefox.desktop", None),
             ("org.mozilla.firefox.desktop", None),
             ("", None),
@@ -164,6 +169,12 @@ class TestLinuxProfileDir:
         flatpak = tmp_path / ".var" / "app" / "com.google.Chrome" / "config" / "google-chrome"
         flatpak.mkdir(parents=True)
         assert bc.real_profile_data_dir("chrome", "Linux") == str(flatpak)
+
+    def test_flatpak_vivaldi_profile_is_found(self, tmp_path, monkeypatch):
+        self._env(monkeypatch, tmp_path)
+        flatpak = tmp_path / ".var" / "app" / "com.vivaldi.Vivaldi" / "config" / "vivaldi"
+        flatpak.mkdir(parents=True)
+        assert bc.real_profile_data_dir("vivaldi", "Linux") == str(flatpak)
 
     def test_native_profile_wins_when_present(self, tmp_path, monkeypatch):
         self._env(monkeypatch, tmp_path)

@@ -62,6 +62,17 @@ class TestRealProfileResolvers:
         assert m["msedgehtm"] == "edge"
         assert m["bravehtml"] == "brave"
         assert m["braveohtml"] == "brave-origin"
+        assert m["vivaldihtm"] == "vivaldi"
+
+    def test_vivaldi_data_dirs(self):
+        import hermes_cli.browser_connect as bc
+        with patch.dict(os.environ, {"LOCALAPPDATA": r"C:\Users\T\AppData\Local"}, clear=False):
+            win = bc.real_profile_data_dir("vivaldi", "Windows")
+        assert win and win.endswith(ntpath.join("Vivaldi", "User Data"))
+        with patch.dict(os.environ, {"XDG_CONFIG_HOME": "/home/t/.config"}, clear=False):
+            assert bc.real_profile_data_dir("vivaldi", "Linux") == "/home/t/.config/vivaldi"
+        mac = bc.real_profile_data_dir("vivaldi", "Darwin")
+        assert mac and mac.endswith("Library/Application Support/Vivaldi")
 
     def test_brave_origin_data_dirs(self):
         import hermes_cli.browser_connect as bc

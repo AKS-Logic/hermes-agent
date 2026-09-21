@@ -52,8 +52,8 @@ class _Browser:
     linux_exec: tuple[str, ...] | None = None
 
 
-# Launch-candidate order (chrome, chromium, brave, brave-origin, edge) is the tuple
-# order. ``brave-origin`` is Brave's standalone paid build: same Chromium core but a
+# Launch-candidate order (chrome, chromium, brave, brave-origin, edge, vivaldi) is
+# the tuple order. ``brave-origin`` is Brave's standalone paid build: same Chromium core but a
 # fully distinct install identity (Brave-Origin product path, ``BraveOHTML`` ProgId,
 # ``com.brave.Browser.origin`` bundle id) that installs side-by-side with Brave. Its
 # profile is NOT under Brave-Browser and must never be conflated with the ``brave``
@@ -106,6 +106,15 @@ _BROWSERS = (
         ("/usr/bin/microsoft-edge", "/usr/bin/microsoft-edge-stable",
          "/opt/microsoft/msedge/microsoft-edge", "/opt/microsoft/msedge/msedge"),
         "microsoft-edge", linux_exec=("microsoft-edge", "microsoft-edge-stable")),
+    _Browser(
+        "vivaldi", "/Applications/Vivaldi.app/Contents/MacOS/Vivaldi",
+        ("Vivaldi",), ("vivaldi.exe", "vivaldi"),
+        (("Vivaldi", "Application", "vivaldi.exe"),),
+        ("Vivaldi", "User Data"),
+        ("vivaldi-stable", "vivaldi"),
+        ("/usr/bin/vivaldi-stable", "/usr/bin/vivaldi",
+         "/opt/vivaldi/vivaldi-stable", "/opt/vivaldi/vivaldi-bin"),
+        "vivaldi"),
 )
 _BROWSER_BY_KEY = {b.key: b for b in _BROWSERS}
 
@@ -123,7 +132,10 @@ _BROWSER_BY_KEY = {b.key: b for b in _BROWSERS}
 _WINDOWS_PROGID_MAP = (
     ("chromehtml", "chrome"), ("msedgehtm", "edge"),
     ("braveohtml", "brave-origin"),  # Brave Origin stable (brave-core install_static)
-    ("bravehtml", "brave"), ("chromiumhtm", "chromium"))
+    ("bravehtml", "brave"), ("chromiumhtm", "chromium"),
+    # ``VivaldiHTML`` is truncated to the 10-char install_static cap (``VivaldiHTM``);
+    # the short form matches either spelling as a prefix.
+    ("vivaldihtm", "vivaldi"))
 
 # ``ChromeBHTML`` = Beta, ``ChromeDHTML`` = Dev, ``ChromeSSHTML`` = Canary (SxS);
 # ``MSEdge[BDC]HTML`` = Edge channels; Brave Origin Beta=BraveOBHTML, Dev=BraveODHTML,
@@ -141,18 +153,21 @@ _LINUX_DESKTOP_MAP = (
     # ORDER MATTERS: ``brave-origin.desktop`` contains the bare ``brave`` fragment,
     # so the substring scan must hit the Origin entry first (#95549).
     ("brave-origin", "brave-origin"), ("brave", "brave"),
-    ("microsoft-edge", "edge"), ("com.microsoft.edge", "edge"), ("msedge", "edge"))
+    ("microsoft-edge", "edge"), ("com.microsoft.edge", "edge"), ("msedge", "edge"),
+    ("vivaldi", "vivaldi"))
 
 _LINUX_CHANNEL_FRAGMENTS = (
     "google-chrome-beta", "google-chrome-unstable", "google-chrome-canary",
     "com.google.chrome.beta", "com.google.chrome.dev", "com.google.chrome.canary",
     "microsoft-edge-beta", "microsoft-edge-dev", "microsoft-edge-canary",
     "brave-browser-beta", "brave-browser-nightly", "brave-browser-dev",
-    "brave-origin-beta", "brave-origin-nightly", "brave-origin-dev")
+    "brave-origin-beta", "brave-origin-nightly", "brave-origin-dev",
+    "vivaldi-snapshot", "com.vivaldi.vivaldi.snapshot")
 
 # Where sandboxed Linux packages keep the profile instead of $XDG_CONFIG_HOME.
 _LINUX_FLATPAK_IDS = {"chrome": "com.google.Chrome", "chromium": "org.chromium.Chromium",
-                      "brave": "com.brave.Browser", "edge": "com.microsoft.Edge"}
+                      "brave": "com.brave.Browser", "edge": "com.microsoft.Edge",
+                      "vivaldi": "com.vivaldi.Vivaldi"}
 _LINUX_SNAP_PROFILE_PARTS = {
     "chromium": ("snap", "chromium", "common", "chromium"),
     "brave": ("snap", "brave", "current", ".config", "BraveSoftware", "Brave-Browser")}
@@ -163,14 +178,15 @@ _LINUX_SNAP_PROFILE_PARTS = {
 _DARWIN_BUNDLE_MAP = (
     ("com.google.chrome", "chrome"), ("com.microsoft.edgemac", "edge"),
     ("com.brave.browser", "brave"), ("com.brave.browser.origin", "brave-origin"),
-    ("org.chromium.chromium", "chromium"))
+    ("org.chromium.chromium", "chromium"), ("com.vivaldi.vivaldi", "vivaldi"))
 
 _DARWIN_CHANNEL_BUNDLES = (
     "com.google.chrome.beta", "com.google.chrome.dev", "com.google.chrome.canary",
     "com.microsoft.edgemac.beta", "com.microsoft.edgemac.dev", "com.microsoft.edgemac.canary",
     "com.brave.browser.beta", "com.brave.browser.nightly",
     "com.brave.browser.origin.beta", "com.brave.browser.origin.dev",
-    "com.brave.browser.origin.nightly")
+    "com.brave.browser.origin.nightly",
+    "com.vivaldi.vivaldi.snapshot")
 
 # Sentinel for a recognized-but-unsupported Chromium CHANNEL default. Distinct from
 # None (non-Chromium) so the caller can give a channel-specific message.

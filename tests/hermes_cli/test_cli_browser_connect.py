@@ -84,6 +84,32 @@ class TestChromeDebugLaunch:
         assert command is not None
         assert command.startswith(f"{brave} --remote-debugging-port=9222")
 
+    def test_linux_candidates_include_vivaldi_binary_name(self):
+        vivaldi = "/usr/bin/vivaldi-stable"
+
+        with patch("hermes_cli.browser_connect.shutil.which", side_effect=lambda name: vivaldi if name == "vivaldi-stable" else None), \
+             patch("hermes_cli.browser_connect.os.path.isfile", side_effect=lambda path: path == vivaldi):
+            candidates = get_chrome_debug_candidates("Linux")
+            command = manual_chrome_debug_command(9222, "Linux")
+
+        assert candidates == [vivaldi]
+        assert command is not None
+        assert command.startswith(f"{vivaldi} --remote-debugging-port=9222")
+
+    def test_linux_candidates_include_vivaldi_install_path(self):
+        # The .deb/.rpm install keeps the real binary under /opt for Vivaldi's
+        # own launcher shim; a PATH-less install must still be launchable.
+        vivaldi = "/opt/vivaldi/vivaldi-bin"
+
+        with patch("hermes_cli.browser_connect.shutil.which", return_value=None), \
+             patch("hermes_cli.browser_connect.os.path.isfile", side_effect=lambda path: path == vivaldi):
+            candidates = get_chrome_debug_candidates("Linux")
+            command = manual_chrome_debug_command(9222, "Linux")
+
+        assert candidates == [vivaldi]
+        assert command is not None
+        assert command.startswith(f"{vivaldi} --remote-debugging-port=9222")
+
     def test_linux_candidates_include_brave_origin_install_path(self):
         brave = "/opt/brave.com/brave-origin/brave-origin"
 
